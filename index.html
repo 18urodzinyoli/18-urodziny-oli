@@ -208,6 +208,7 @@ photoInput.addEventListener("change", async function () {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("upload_preset", "urodziny_oli_18");
+        formData.append("tags", "urodziny_oli_18");
 
         try {
             const response = await fetch(
