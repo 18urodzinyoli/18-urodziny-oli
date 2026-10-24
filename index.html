@@ -162,42 +162,61 @@
     </footer>
 
     <script>
-        const photoInput = document.getElementById("photoInput");
-        const gallery = document.getElementById("gallery");
-        const status = document.getElementById("status");
+       const photoInput = document.getElementById("photoInput");
+const gallery = document.getElementById("gallery");
+const status = document.getElementById("status");
 
-        photoInput.addEventListener("change", function () {
-            gallery.innerHTML = "";
+photoInput.addEventListener("change", async function () {
+    const files = Array.from(photoInput.files);
 
-            const files = Array.from(photoInput.files);
+    if (files.length === 0) {
+        status.textContent = "Nie wybrano plików.";
+        return;
+    }
 
-            if (files.length === 0) {
-                status.textContent = "Nie wybrano zdjęć.";
-                return;
+    status.textContent = "Trwa wysyłanie zdjęć...";
+    let uploaded = 0;
+
+    for (const file of files) {
+        if (!file.type.startsWith("image/")) {
+            continue;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "urodziny_oli_18");
+
+        try {
+            const response = await fetch(
+                "https://api.cloudinary.com/v1_1/kgr9uh8j/image/upload",
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Błąd wysyłania");
             }
 
-            files.forEach(function (file) {
-                if (!file.type.startsWith("image/")) {
-                    return;
-                }
+            const data = await response.json();
 
-                const image = document.createElement("img");
-                image.alt = "Podgląd zdjęcia";
+            const image = document.createElement("img");
+            image.src = data.secure_url;
+            image.alt = "Zdjęcie z 18. urodzin Oli";
+            gallery.appendChild(image);
 
-                const reader = new FileReader();
+            uploaded++;
+            status.textContent = `Wysłano ${uploaded} z ${files.length} zdjęć.`;
+        } catch (error) {
+            status.textContent = "Nie udało się wysłać jednego ze zdjęć.";
+        }
+    }
 
-                reader.onload = function (event) {
-                    image.src = event.target.result;
-                };
-
-                reader.readAsDataURL(file);
-                gallery.appendChild(image);
-            });
-
-            status.textContent =
-                "Podgląd: " + files.length +
-                " wybranych plików. To jeszcze nie jest wysyłka.";
-        });
+    if (uploaded > 0) {
+        status.textContent = `Gotowe! Wysłano ${uploaded} zdjęć. ❤️`;
+    }
+});
     </script>
 
 </body>
