@@ -251,5 +251,145 @@ photoInput.addEventListener("change", async function () {
 });
     </script>
 
+
+<style>
+  #photoViewer {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.94);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  #photoViewer.open {
+    display: flex;
+  }
+
+  #viewerImage {
+    max-width: 90vw;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+
+  .viewerControls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+  }
+
+  .viewerControls button,
+  #downloadPhoto,
+  #closeViewer {
+    background: #fff;
+    color: #102f35;
+    border: 0;
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  #closeViewer {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    font-size: 24px;
+  }
+
+  #gallery img {
+    cursor: pointer;
+  }
+</style>
+
+<div id="photoViewer" role="dialog" aria-label="Podgląd zdjęcia">
+  <button id="closeViewer" type="button">×</button>
+  <img id="viewerImage" alt="Zdjęcie z urodzin Oli">
+
+  <div class="viewerControls">
+    <button id="previousPhoto" type="button">❮</button>
+    <a id="downloadPhoto" href="#" target="_blank" rel="noopener">
+      Pobierz zdjęcie
+    </a>
+    <button id="nextPhoto" type="button">❯</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  const gallery = document.getElementById("gallery");
+  const viewer = document.getElementById("photoViewer");
+  const image = document.getElementById("viewerImage");
+  const download = document.getElementById("downloadPhoto");
+
+  let currentIndex = 0;
+
+  function photos() {
+    return Array.from(gallery.querySelectorAll("img"));
+  }
+
+  function showPhoto(index) {
+    const items = photos();
+    if (!items.length) return;
+
+    currentIndex = (index + items.length) % items.length;
+    const src = items[currentIndex].src;
+
+    image.src = src;
+
+    // Cloudinary pozwala wymusić pobranie pliku.
+    if (src.includes("res.cloudinary.com/")) {
+      download.href = src.replace(
+        "/image/upload/",
+        "/image/upload/fl_attachment/"
+      );
+    } else {
+      download.href = src;
+    }
+
+    viewer.classList.add("open");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closePhoto() {
+    viewer.classList.remove("open");
+    document.body.style.overflow = "";
+  }
+
+  gallery.addEventListener("click", (event) => {
+    if (event.target.tagName !== "IMG") return;
+    showPhoto(photos().indexOf(event.target));
+  });
+
+  document.getElementById("previousPhoto")
+    .addEventListener("click", () => showPhoto(currentIndex - 1));
+
+  document.getElementById("nextPhoto")
+    .addEventListener("click", () => showPhoto(currentIndex + 1));
+
+  document.getElementById("closeViewer")
+    .addEventListener("click", closePhoto);
+
+  viewer.addEventListener("click", (event) => {
+    if (event.target === viewer) closePhoto();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (!viewer.classList.contains("open")) return;
+
+    if (event.key === "Escape") closePhoto();
+    if (event.key === "ArrowRight") showPhoto(currentIndex + 1);
+    if (event.key === "ArrowLeft") showPhoto(currentIndex - 1);
+  });
+})();
+</script>
+
 </body>
 </html>
