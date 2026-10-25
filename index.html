@@ -384,6 +384,36 @@ photoInput.addEventListener("change", async function () {
     </a>
     <button id="nextPhoto" type="button">❯</button>
   </div>
+    
+<div id="photoComments">
+  <h3>💬 Komentarze</h3>
+
+  <div id="commentsList"></div>
+
+  <form id="commentForm">
+    <input
+      id="commentNickname"
+      type="text"
+      placeholder="Twoje imię lub pseudonim"
+      maxlength="30"
+      required
+    >
+
+    <textarea
+      id="commentText"
+      placeholder="Napisz komentarz..."
+      maxlength="500"
+      required
+    ></textarea>
+
+    <button type="submit">
+      Dodaj komentarz ❤️
+    </button>
+  </form>
+
+  <p id="commentStatus"></p>
+</div>
+
 </div>
 
 <script>
@@ -399,7 +429,108 @@ photoInput.addEventListener("change", async function () {
     return Array.from(gallery.querySelectorAll("img"));
   }
 
-  function showPhoto(index) {
+  
+const commentsApi =
+  "https://urodziny-oli-galeria.dola71458.workers.dev/komentarze";
+
+const commentsList = document.getElementById("commentsList");
+const commentForm = document.getElementById("commentForm");
+const commentStatus = document.getElementById("commentStatus");
+
+async function loadPhotoComments(photoUrl) {
+  commentsList.textContent = "Ładowanie komentarzy...";
+  commentStatus.textContent = "";
+
+  try {
+    const response = await fetch(
+      commentsApi + "?photo=" + encodeURIComponent(photoUrl)
+    );
+
+    if (!response.ok) throw new Error("Błąd pobierania");
+
+    const comments = await response.json();
+
+    if (image.src !== photoUrl) return;
+
+    commentsList.replaceChildren();
+
+    if (!comments.length) {
+      commentsList.textContent =
+        "Brak komentarzy. Napisz pierwszy! ❤️";
+      return;
+    }
+
+    comments.forEach(item => {
+      const box = document.createElement("div");
+      box.style.margin = "12px 0";
+      box.style.padding = "10px";
+      box.style.background = "rgba(255,255,255,0.12)";
+      box.style.borderRadius = "10px";
+
+      const name = document.createElement("strong");
+      name.textContent = item.nickname;
+
+      const message = document.createElement("p");
+      message.textContent = item.comment;
+      message.style.whiteSpace = "pre-wrap";
+
+      box.append(name, message);
+      commentsList.appendChild(box);
+    });
+  } catch (error) {
+    commentsList.textContent =
+      "Nie udało się pobrać komentarzy.";
+  }
+}
+
+commentForm.addEventListener("submit", async event => {
+  event.preventDefault();
+
+  const nickname =
+    document.getElementById("commentNickname").value.trim();
+
+  const comment =
+    document.getElementById("commentText").value.trim();
+
+  const photo = image.src;
+
+  if (!nickname || !comment) return;
+
+  const button = commentForm.querySelector("button");
+  button.disabled = true;
+  commentStatus.textContent = "Wysyłanie...";
+
+  try {
+    const response = await fetch(commentsApi, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        photo,
+        nickname,
+        comment
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || "Błąd wysyłania");
+    }
+
+    document.getElementById("commentText").value = "";
+    commentStatus.textContent = "Komentarz dodany! ❤️";
+
+    await loadPhotoComments(photo);
+  } catch (error) {
+    commentStatus.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+});
+
+    function showPhoto(index) {
     const items = photos();
     if (!items.length) return;
 
@@ -407,6 +538,7 @@ photoInput.addEventListener("change", async function () {
     const src = items[currentIndex].src;
 
     image.src = src;
+      loadPhotoComments(src);
 
     const previousBar = viewer.querySelector(".reactions");
 
