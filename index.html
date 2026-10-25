@@ -446,36 +446,79 @@ photoInput.addEventListener("change", async function () {
 
 
 <script>
+
 function createReactionBar(photoId) {
   const reactions = ["❤️", "😍", "😂", "🥹", "🔥"];
   const wrapper = document.createElement("div");
   wrapper.className = "reactions";
 
-  const storageKey = "reactions_" + photoId;
-  let savedReactions = JSON.parse(
-    localStorage.getItem(storageKey) || "{}"
-  );
+  const api = "https://urodziny-oli-galeria.dola71458.workers.dev/reakcje";
+  const visitorKey = "ola_visitor_id";
 
-  reactions.forEach((emoji) => {
+  let visitor = localStorage.getItem(visitorKey);
+  if (!visitor || !/^[0-9a-f-]{36}$/i.test(visitor)) {
+    visitor = crypto.randomUUID();
+    localStorage.setItem(visitorKey, visitor);
+  }
+
+  const buttons = {};
+
+  reactions.forEach(emoji => {
     const btn = document.createElement("button");
     btn.className = "reaction-btn";
     btn.type = "button";
-
-    const count = savedReactions[emoji] || 0;
-    btn.textContent = `${emoji} ${count}`;
-
-    btn.addEventListener("click", () => {
-      savedReactions[emoji] = (savedReactions[emoji] || 0) + 1;
-      localStorage.setItem(storageKey, JSON.stringify(savedReactions));
-      btn.textContent = `${emoji} ${savedReactions[emoji]}`;
-      btn.classList.add("active");
-    });
-
+    btn.textContent = `${emoji} 0`;
+    buttons[emoji] = btn;
     wrapper.appendChild(btn);
+
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+
+      try {
+        const response = await fetch(api, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            photo: photoId,
+            emoji: emoji,
+            visitor: visitor
+          })
+        });
+
+        if (!response.ok) throw new Error("Błąd zapisu");
+
+        btn.classList.add("active");
+        await loadCounts();
+      } catch (error) {
+        alert("Nie udało się zapisać reakcji. Spróbuj ponownie.");
+      } finally {
+        btn.disabled = false;
+      }
+    });
   });
 
+  async function loadCounts() {
+    try {
+      const response = await fetch(
+        `${api}?photo=${encodeURIComponent(photoId)}`
+      );
+
+      if (!response.ok) throw new Error("Błąd odczytu");
+
+      const counts = await response.json();
+
+      reactions.forEach(emoji => {
+        buttons[emoji].textContent = `${emoji} ${counts[emoji] || 0}`;
+      });
+    } catch (error) {
+      console.error("Nie udało się pobrać reakcji:", error);
+    }
+  }
+
+  loadCounts();
   return wrapper;
 }
+
 </script>
 
 </body>
