@@ -371,6 +371,74 @@ photoInput.addEventListener("change", async function () {
   gap: 8px;
   margin: 15px 0;
 }
+    
+/* Przewijanie podglądu zdjęcia */
+#photoViewer.open {
+  overflow-y: auto;
+  justify-content: flex-start;
+  padding: 20px 12px 50px;
+  box-sizing: border-box;
+}
+
+/* Zdjęcie nie zajmuje całego ekranu */
+#viewerImage {
+  max-height: 48vh;
+  max-width: 95%;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* Sekcja komentarzy */
+#photoComments {
+  width: min(92%, 420px);
+  margin: 18px auto 30px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.09);
+  border-radius: 15px;
+  color: white;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Pola jedno pod drugim */
+#commentForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#commentNickname,
+#commentText {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  background: white;
+  color: black;
+}
+
+#commentText {
+  min-height: 80px;
+  resize: vertical;
+}
+
+#commentForm button {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 8px;
+  background: #f4dbe2;
+  color: #222;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#commentStatus {
+  margin-top: 10px;
+}
+
 </style>
 
 <div id="photoViewer" role="dialog" aria-label="Podgląd zdjęcia">
