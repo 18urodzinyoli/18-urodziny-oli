@@ -360,6 +360,17 @@ photoInput.addEventListener("change", async function () {
   #gallery img {
     cursor: pointer;
   }
+#gallery .reactions {
+  display: none;
+}
+
+#photoViewer .reactions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 15px 0;
+}
 </style>
 
 <div id="photoViewer" role="dialog" aria-label="Podgląd zdjęcia">
@@ -396,6 +407,21 @@ photoInput.addEventListener("change", async function () {
     const src = items[currentIndex].src;
 
     image.src = src;
+
+    const previousBar = viewer.querySelector(".reactions");
+
+    if (previousBar && previousBar._originalCard) {
+      previousBar._originalCard.appendChild(previousBar);
+    }
+
+    const currentCard = items[currentIndex].closest(".photo-card");
+    const reactionBar = currentCard?.querySelector(".reactions");
+    const controls = viewer.querySelector(".viewerControls");
+
+    if (reactionBar && controls) {
+      reactionBar._originalCard = currentCard;
+      viewer.insertBefore(reactionBar, controls);
+    }
 
     // Cloudinary pozwala wymusić pobranie pliku.
     if (src.includes("res.cloudinary.com/")) {
